@@ -1,16 +1,37 @@
-# This is a sample Python script.
+from flask import Flask
+from flask import render_template
+from flask import request
+from flask import send_from_directory
+import os
 
-# Press Mayús+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+UPLOAD_FOLDER = 'static/uploaded_images'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        # Guardar las imágenes subidas
+        image1 = request.files.get('image1')
+        image2 = request.files.get('image2')
+
+        if image1 and image2:
+            image1_path = os.path.join(app.config['UPLOAD_FOLDER'], image1.filename)
+            image2_path = os.path.join(app.config['UPLOAD_FOLDER'], image2.filename)
+            image1.save(image1_path)
+            image2.save(image2_path)
+            return render_template('index.html', uploaded_image=image1.filename)
+
+    return render_template('index.html', uploaded_image=None)
 
 
-# Press the green button in the gutter to run the script.
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    app.run(debug=True)
